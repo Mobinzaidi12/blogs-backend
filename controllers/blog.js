@@ -27,20 +27,57 @@ const createBlogs = async (req, res) => {
     }
 }
 
+const getBlog = async (req, res) => {
 
-const updateBlog = async () => {
+    try {
+        const data = await Blog.find();
+
+        if (data.lenght < 1) {
+            res.status(400).json({ status: false, mes: "Data Not Found" })
+        }
+
+        res.status(200).send({ status: true, data });
+
+    } catch (error) {
+        res.status(500).send({ status: false, message: error });
+        console.log(error)
+    }
+
+}
+
+const getBlogById = async (req, res) => {
+
+    try {
+        const { id } = req.params;
+        const data = await Blog.findById(id)
+        if (data.author.toString(id) == req.user.id) {
+            return res.status(200).json({ status: true, data })
+        }
+
+        return res.status(403).json({ message: 'Permission denied' });
+
+
+    } catch (error) {
+        res.status(500).send({ status: false, message: error });
+        console.log(error)
+    }
+
+}
+
+const updateBlog = async (req, res) => {
     try {
 
         const { id } = req.params;
         const { title, content } = req.body;
 
         const blog = await Blog.findById(id);
-        console.log(id)
+
         if (!blog) {
             return res.status(404).json({ message: 'Blog not found' });
         }
 
-        if (blog.author.toSting() != req.user.id) {
+        if (blog.author.toString(id) !== req.user.id) {
+
             return res.status(403).json({ message: 'Permission denied' });
 
         }
@@ -64,6 +101,23 @@ const updateBlog = async () => {
 }
 
 
+const deleteBlog = async (req, res) => {
+    const { id } = req.params;
+    let data = await Blog.findById(id);
+
+    if (!data) {
+        return res.status(403).json({ status: false, mes: "Data Not found" })
+    };
+    if (data.author.toString(id) !== req.user.id) {
+        return res.status(400).json({ status: false, mes: "Permission denied" })
+    }
+
+    await Blog.findByIdAndDelete(id)
+
+    res.status(200).json({ status: true, mes: "Data Deleted" })
+
+}
 
 
-module.exports = { createBlogs, updateBlog }
+
+module.exports = { createBlogs, updateBlog, getBlog, getBlogById, deleteBlog }
